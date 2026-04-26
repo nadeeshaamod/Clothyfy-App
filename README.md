@@ -35,44 +35,6 @@ A modern Flutter web application for online shopping with authentication, produc
 ### Profile Screen
 ![Profile Screen](assets/images/Screenshots/profile.png)
 
----
-
-## Project Structure
-
-```
-clothyfy/
-├── lib/
-│   ├── main.dart                          # App entry point with Provider setup
-│   ├── models/
-│   │   ├── product.dart                   # Product model + 12 dummy products
-│   │   └── cart_item.dart                 # Cart item model with quantity tracking
-│   ├── providers/
-│   │   ├── cart_provider.dart             # Cart state: add/remove/update items
-│   │   └── wishlist_provider.dart         # Wishlist state: add/remove saved items
-│   ├── utils/
-│   │   └── app_theme.dart                 # Design system: colors, typography, FadeSlideTransition
-│   └── views/
-│       ├── screens/
-│       │   ├── login_screen.dart          # Login with tab-based UI, animations
-│       │   ├── register_screen.dart       # Registration form with 4 fields
-│       │   ├── home_screen.dart           # Hero banner carousel + product grid
-│       │   ├── product_listing_screen.dart# Browse/filter products by category
-│       │   ├── product_detail_screen.dart # Detail view with size/color selection
-│       │   ├── cart_screen.dart           # Shopping bag with item management
-│       │   ├── checkout_screen.dart       # Checkout form + order preview
-│       │   ├── profile_screen.dart        # User profile with menu + badge support
-│       │   └── wishlist_screen.dart       # Saved items grid
-│       └── widgets/
-│           ├── product_card.dart          # Reusable product card component
-│           └── reusable_widgets.dart      # ClothyfyAppBar, ClothyfyBottomNav, etc.
-├── assets/
-│   └── images/                            # Local image assets (currently using Unsplash URLs)
-├── test/
-│   └── widget_test.dart                   # Smoke test configuration
-├── web/                                   # Web platform configuration
-├── pubspec.yaml                           # Dependencies and Flutter config
-└── README.md                              # This file
-```
 
 ---
 
@@ -118,15 +80,7 @@ clothyfy/
 
 ---
 
-## Tech Stack
 
-- **Framework:** Flutter
-- **Language:** Dart
-- **State Management:** Provider
-- **UI Fonts:** Space Grotesk (headings), DM Sans (body)
-- **Platform:** Web
-
----
 
 ## Getting Started
 
