@@ -69,7 +69,7 @@ class ClothyfyBottomNav extends StatelessWidget {
         borderRadius: BorderRadius.circular(40),
         boxShadow: [
           BoxShadow(
-            color: AppColors.dark.withOpacity(0.3),
+            color: AppColors.dark.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -118,7 +118,7 @@ class _NavItem extends StatelessWidget {
           vertical: 8,
         ),
         decoration: BoxDecoration(
-          color: isActive ? Colors.white.withOpacity(0.15) : Colors.transparent,
+          color: isActive ? Colors.white.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Icon(
@@ -157,7 +157,7 @@ class WishlistButton extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
             ),
           ],

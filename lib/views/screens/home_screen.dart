@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/products_provider.dart';
 import '../../utils/app_theme.dart';
 import '../widgets/product_card.dart';
 import '../widgets/reusable_widgets.dart';
@@ -24,6 +25,17 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _navIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      context.read<ProductsProvider>().loadProducts();
+    });
+  }
+
   void _onNavTap(int index) {
     if (index == 0) {
       setState(() => _navIndex = 0);
@@ -41,6 +53,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+    final products = context.watch<ProductsProvider>().featuredProducts;
+    final firstGridProducts = products.take(4).toList();
+    final secondGridProducts = products.length > 4 ? products.skip(4).take(4).toList() : <Product>[];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -213,9 +228,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisSpacing: 14,
                   mainAxisSpacing: 20,
                 ),
-                itemCount: 4,
+                itemCount: firstGridProducts.length,
                 itemBuilder: (context, index) {
-                  final product = dummyProducts[index];
+                  final product = firstGridProducts[index];
                   return ProductCard(
                     product: product,
                     onTap: () => Navigator.push(
@@ -242,9 +257,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisSpacing: 14,
                   mainAxisSpacing: 20,
                 ),
-                itemCount: 4,
+                itemCount: secondGridProducts.length,
                 itemBuilder: (context, index) {
-                  final product = dummyProducts[index + 4];
+                  final product = secondGridProducts[index];
                   return ProductCard(
                     product: product,
                     onTap: () => Navigator.push(
@@ -365,7 +380,7 @@ class _HeroBannerState extends State<_HeroBanner> {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withOpacity(0.7),
+                              Colors.black.withValues(alpha: 0.7),
                             ],
                           ),
                         ),
@@ -382,7 +397,7 @@ class _HeroBannerState extends State<_HeroBanner> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 5),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.6),
+                                  color: Colors.black.withValues(alpha: 0.6),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(

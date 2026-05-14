@@ -2,6 +2,8 @@
 // Registration screen with tab navigation
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
@@ -21,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   final _confirmController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _isLoading = false;
   late AnimationController _animController;
   late Animation<double> _fadeIn;
 
@@ -43,6 +46,52 @@ class _RegisterScreenState extends State<RegisterScreen>
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
+  }
+
+  Future<void> _register() async {
+    if (_isLoading) {
+      return;
+    }
+
+    if (_passwordController.text != _confirmController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Passwords do not match'),
+          backgroundColor: AppColors.dark,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final success = await context.read<AuthProvider>().signUp(
+          name: _nameController.text,
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+
+    if (!mounted) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    if (!success) {
+      setState(() => _isLoading = false);
+      final err = context.read<AuthProvider>().lastError;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(err ?? 'Unable to create account'),
+          backgroundColor: AppColors.dark,
+        ),
+      );
+      return;
+    }
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -97,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 onTap: () => Navigator.pushReplacement(
                                   context,
                                   FadeSlideTransition(
-                                    page: LoginScreen(),
+                                    page: const LoginScreen(),
                                   ),
                                 ),
                                 child: const Center(
@@ -302,11 +351,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: () => Navigator.pushAndRemoveUntil(
-                            context,
-                            FadeSlideTransition(page: HomeScreen()),
-                            (_) => false,
-                          ),
+                          onPressed: _isLoading ? null : _register,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.dark,
                             shape: RoundedRectangleBorder(
@@ -314,20 +359,42 @@ class _RegisterScreenState extends State<RegisterScreen>
                             ),
                             elevation: 0,
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                'Join Now',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
+                              if (_isLoading)
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white.withValues(alpha: 0.9),
+                                    ),
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              else
+                                const Text(
+                                  'Join Now',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward,
-                                  color: Colors.white, size: 16),
+                              const SizedBox(width: 8),
+                              if (!_isLoading)
+                                const Icon(Icons.arrow_forward,
+                                    color: Colors.white, size: 16),
+                              if (_isLoading)
+                                const Text(
+                                  'Creating...',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                             ],
                           ),
                         ),

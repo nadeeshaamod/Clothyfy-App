@@ -2,8 +2,9 @@
 // Login screen with tab navigation
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
-import 'home_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
   late AnimationController _animController;
   late Animation<double> _fadeIn;
 
@@ -40,8 +42,63 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  void _navigateToHome() {
-    Navigator.pushReplacement(context, FadeSlideTransition(page: HomeScreen()));
+  Future<void> _login() async {
+    if (_isLoading) {
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final auth = context.read<AuthProvider>();
+    final success = await auth.signIn(
+      _emailController.text,
+      _passwordController.text,
+    );
+
+    if (!mounted) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    if (!success) {
+      setState(() => _isLoading = false);
+      final err = auth.lastError;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(err ?? 'Invalid email or password'),
+          backgroundColor: AppColors.dark,
+        ),
+      );
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter your email first'),
+          backgroundColor: AppColors.dark,
+        ),
+      );
+      return;
+    }
+
+    final success = await context.read<AuthProvider>().resetPassword(email);
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? 'Password reset email sent'
+              : 'Password reset is unavailable in local mode',
+        ),
+        backgroundColor: AppColors.dark,
+      ),
+    );
   }
 
   @override
@@ -115,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 onTap: () => Navigator.pushReplacement(
                                   context,
                                   FadeSlideTransition(
-                                    page: RegisterScreen(),
+                                    page: const RegisterScreen(),
                                   ),
                                 ),
                                 child: const Center(
@@ -203,9 +260,7 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                           ),
                           GestureDetector(
-                            onTap: () {
-                              // Forgot password action
-                            },
+                            onTap: _forgotPassword,
                             child: const Text(
                               'Forgot?',
                               style: TextStyle(
@@ -250,7 +305,7 @@ class _LoginScreenState extends State<LoginScreen>
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: _navigateToHome,
+                          onPressed: _isLoading ? null : _login,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.dark,
                             shape: RoundedRectangleBorder(
@@ -258,20 +313,42 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                             elevation: 0,
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                'Login',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
+                              if (_isLoading)
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white.withValues(alpha: 0.9),
+                                    ),
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              else
+                                const Text(
+                                  'Login',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward,
-                                  color: Colors.white, size: 16),
+                              const SizedBox(width: 8),
+                              if (!_isLoading)
+                                const Icon(Icons.arrow_forward,
+                                    color: Colors.white, size: 16),
+                              if (_isLoading)
+                                const Text(
+                                  'Signing in...',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                             ],
                           ),
                         ),

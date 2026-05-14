@@ -116,7 +116,7 @@ class CartScreen extends StatelessWidget {
                           label: 'Tax',
                           value: '\$${cart.tax.toStringAsFixed(2)}'),
                       const SizedBox(height: 16),
-                      Divider(color: Colors.white.withOpacity(0.15)),
+                      Divider(color: Colors.white.withValues(alpha: 0.15)),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -181,7 +181,7 @@ class CartScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
+                          color: Colors.white.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Row(
@@ -221,7 +221,7 @@ class CartScreen extends StatelessWidget {
                           Text(
                             'Secure checkout powered by Stripe',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.4),
+                              color: Colors.white.withValues(alpha: 0.4),
                               fontSize: 11,
                             ),
                           ),

@@ -3,7 +3,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/orders_provider.dart';
 import '../../utils/app_theme.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -20,9 +22,44 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _zipController = TextEditingController(text: '10001');
   int _selectedPayment = 0; // 0 = Apple Pay, 1 = Credit Card
 
-  void _placeOrder(BuildContext context) {
+  Future<void> _placeOrder(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    final auth = context.read<AuthProvider>();
+    final user = auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in to place an order'),
+          backgroundColor: AppColors.dark,
+        ),
+      );
+      return;
+    }
+
+    final cart = context.read<CartProvider>();
+    final orders = context.read<OrdersProvider>();
+    final paymentMethod = _selectedPayment == 0 ? 'Apple Pay' : 'Credit Card';
+    final address = '${_addressController.text}, ${_cityController.text} ${_zipController.text}';
+
+    final success = await orders.placeOrder(
+      user: user,
+      cartItems: cart.items,
+      paymentMethod: paymentMethod,
+      address: address,
+      city: _cityController.text,
+      zip: _zipController.text,
+      subtotal: cart.subtotal,
+      shipping: cart.hasFreeShipping ? 0 : 12,
+      tax: cart.tax,
+      total: cart.total + (cart.hasFreeShipping ? 0 : 12),
+    );
+
+    if (!success || !mounted) {
+      return;
+    }
+
     showDialog(
-      context: context,
+      context: navigator.context,
       barrierDismissible: false,
       builder: (_) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -60,7 +97,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    context.read<CartProvider>().clearCart();
+                    cart.clearCart();
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   },
                   child: const Text('CONTINUE SHOPPING'),
@@ -289,7 +326,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ),
                       )),
 
-                  Divider(color: Colors.white.withOpacity(0.15)),
+                  Divider(color: Colors.white.withValues(alpha: 0.15)),
                   const SizedBox(height: 12),
 
                   // Subtotal

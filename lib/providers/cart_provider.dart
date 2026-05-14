@@ -1,12 +1,21 @@
 // providers/cart_provider.dart
 // Manages cart state using Provider
 
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/cart_item.dart';
 import '../models/product.dart';
 
 class CartProvider with ChangeNotifier {
+  static const _storageKey = 'clothyfy_cart_items';
+
   final List<CartItem> _items = [];
+
+  CartProvider() {
+    loadCart();
+  }
 
   List<CartItem> get items => List.unmodifiable(_items);
 
@@ -19,6 +28,34 @@ class CartProvider with ChangeNotifier {
   double get total => subtotal + tax;
 
   bool get hasFreeShipping => subtotal >= 200;
+
+  Future<void> loadCart() async {
+    final preferences = await SharedPreferences.getInstance();
+    final stored = preferences.getString(_storageKey);
+    if (stored == null || stored.isEmpty) {
+      return;
+    }
+
+    try {
+      final decoded = jsonDecode(stored) as List<dynamic>;
+      _items
+        ..clear()
+        ..addAll(
+          decoded
+              .map((item) => CartItem.fromMap(Map<String, dynamic>.from(item)))
+              .toList(),
+        );
+      notifyListeners();
+    } catch (_) {
+      _items.clear();
+    }
+  }
+
+  Future<void> _saveCart() async {
+    final preferences = await SharedPreferences.getInstance();
+    final encoded = jsonEncode(_items.map((item) => item.toMap()).toList());
+    await preferences.setString(_storageKey, encoded);
+  }
 
   /// Add product to cart or increment quantity if already exists
   void addItem(Product product, String size, String color) {
@@ -38,12 +75,14 @@ class CartProvider with ChangeNotifier {
         selectedColor: color,
       ));
     }
+    _saveCart();
     notifyListeners();
   }
 
   /// Increase quantity of specific cart item
   void increaseQuantity(int index) {
     _items[index].quantity++;
+    _saveCart();
     notifyListeners();
   }
 
@@ -54,18 +93,21 @@ class CartProvider with ChangeNotifier {
     } else {
       _items.removeAt(index);
     }
+    _saveCart();
     notifyListeners();
   }
 
   /// Remove item completely from cart
   void removeItem(int index) {
     _items.removeAt(index);
+    _saveCart();
     notifyListeners();
   }
 
   /// Clear the entire cart
   void clearCart() {
     _items.clear();
+    _saveCart();
     notifyListeners();
   }
 }
