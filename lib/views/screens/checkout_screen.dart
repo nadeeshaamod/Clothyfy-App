@@ -21,9 +21,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _cityController = TextEditingController(text: 'Gampaha');
   final _zipController = TextEditingController(text: '10001');
   int _selectedPayment = 0; // 0 = Apple Pay, 1 = Credit Card
+  bool _isPlacing = false;
 
   Future<void> _placeOrder(BuildContext context) async {
-    final navigator = Navigator.of(context);
+    if (_isPlacing) return;
+    setState(() => _isPlacing = true);
+
+    // Avoid capturing the BuildContext across awaits; check `mounted` after async work.
     final auth = context.read<AuthProvider>();
     final user = auth.currentUser;
     if (user == null) {
@@ -33,6 +37,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           backgroundColor: AppColors.dark,
         ),
       );
+      setState(() => _isPlacing = false);
       return;
     }
 
@@ -54,12 +59,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       total: cart.total + (cart.hasFreeShipping ? 0 : 12),
     );
 
-    if (!success || !mounted) {
+    if (!mounted) return;
+
+    if (!success) {
+      final err = orders.lastError;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(err ?? 'Unable to place order'),
+          backgroundColor: AppColors.dark,
+        ),
+      );
+      setState(() => _isPlacing = false);
       return;
     }
 
+    setState(() => _isPlacing = false);
+
     showDialog(
-      context: navigator.context,
+      context: context,
       barrierDismissible: false,
       builder: (_) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -144,8 +161,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         actions: [
           IconButton(
-            icon:
-                const Icon(Icons.shopping_bag_outlined, color: AppColors.dark),
+            icon: const Icon(Icons.shopping_bag_outlined, color: AppColors.dark),
             onPressed: () {},
           ),
         ],
@@ -430,30 +446,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         color: AppColors.background,
-        child: SizedBox(
-          height: 56,
-          child: ElevatedButton(
-            onPressed: () => _placeOrder(context),
+          child: SizedBox(
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _isPlacing ? null : () => _placeOrder(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.dark,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(50)),
             ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Place Order',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(width: 10),
-                Icon(Icons.arrow_forward, color: Colors.white, size: 16),
-              ],
-            ),
+              child: _isPlacing
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Place Order',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 16),
+                      ],
+                    ),
           ),
         ),
       ),

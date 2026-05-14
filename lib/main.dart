@@ -36,8 +36,15 @@ class ClothyfyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => ProductsProvider()),
         ChangeNotifierProvider(create: (_) => OrdersProvider()),
-        // Wishlist state management
-        ChangeNotifierProvider(create: (_) => WishlistProvider()),
+        // Wishlist state management (scoped to authenticated user)
+        ChangeNotifierProxyProvider<AuthProvider, WishlistProvider>(
+          create: (_) => WishlistProvider(),
+          update: (_, auth, wishlist) {
+            wishlist ??= WishlistProvider();
+            wishlist.setUser(auth.currentUser?.uid);
+            return wishlist;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'CLOTHYFY',

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
+import 'home_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -49,26 +50,36 @@ class _LoginScreenState extends State<LoginScreen>
 
     setState(() => _isLoading = true);
 
-    final auth = context.read<AuthProvider>();
-    final success = await auth.signIn(
-      _emailController.text,
-      _passwordController.text,
-    );
-
-    if (!mounted) {
-      setState(() => _isLoading = false);
-      return;
-    }
-
-    if (!success) {
-      setState(() => _isLoading = false);
-      final err = auth.lastError;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(err ?? 'Invalid email or password'),
-          backgroundColor: AppColors.dark,
-        ),
+    try {
+      final auth = context.read<AuthProvider>();
+      final success = await auth.signIn(
+        _emailController.text,
+        _passwordController.text,
       );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (!success) {
+        final err = auth.lastError;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err ?? 'Invalid email or password'),
+            backgroundColor: AppColors.dark,
+          ),
+        );
+        return;
+      }
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
