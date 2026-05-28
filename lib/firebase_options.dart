@@ -53,7 +53,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCpgfi7JmuhSLHje0hLiPaCimNdt0fmdAI',
+    apiKey: 'REPLACE_ME',
     appId: '1:35899468850:web:d98a7991d5987cd29d602b',
     messagingSenderId: '35899468850',
     projectId: 'clothyfy-app',
