@@ -228,6 +228,7 @@ class AuthProvider with ChangeNotifier {
       return false;
     }
 
+    // Apply optimistic local update so UI updates immediately.
     _currentUser = _currentUser!.copyWith(
       name: name.trim(),
       email: email.trim().toLowerCase(),
@@ -237,36 +238,46 @@ class AuthProvider with ChangeNotifier {
       zip: zip,
     );
 
+    // Persist locally and notify listeners right away (optimistic UI).
+    await _saveCurrentUser(_currentUser!);
+    notifyListeners();
+
+    // If Firebase is not available, return success; remote sync will be skipped.
     if (Firebase.apps.isEmpty) {
-      _lastError = 'Firebase is not initialized.';
-      await _saveCurrentUser(_currentUser!);
-      notifyListeners();
-      return false;
+      return true;
     }
 
+    // Perform remote sync in background so the UI isn't blocked.
+    unawaited(_performRemoteProfileUpdate(
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+    ));
+
+    return true;
+  }
+
+  Future<void> _performRemoteProfileUpdate({
+    required String name,
+    required String email,
+  }) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        await user.updateDisplayName(name.trim());
+        await user.updateDisplayName(name).catchError((_) {});
         await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
-            .set(_currentUser!.toMap(), SetOptions(merge: true));
+            .set(_currentUser!.toMap(), SetOptions(merge: true))
+            .timeout(const Duration(seconds: 10));
       }
     } on FirebaseAuthException catch (e) {
       _lastError = e.message ?? e.code;
       // ignore: avoid_print
       print('Auth updateProfile error: code=${e.code}, message=${e.message}');
-      await _saveCurrentUser(_currentUser!);
-      notifyListeners();
-      return false;
-    } catch (_) {
-      // Keep the local cache updated even if the remote sync fails.
+    } catch (e) {
+      // ignore: avoid_print
+      print('Auth remote profile update failed: $e');
     }
-
-    await _saveCurrentUser(_currentUser!);
-    notifyListeners();
-    return true;
   }
 
   Future<AppUser> _loadRemoteProfile(User firebaseUser) async {

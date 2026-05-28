@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/wishlist_provider.dart';
 import '../../utils/app_theme.dart';
 import '../widgets/reusable_widgets.dart';
 import 'login_screen.dart';
@@ -227,15 +228,19 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   _Divider(),
-                  _MenuItem(
-                    icon: Icons.favorite_outline,
-                    label: 'Saved Items',
-                    badge: '12',
-                    onTap: () => Navigator.push(
-                      context,
-                      FadeSlideTransition(page: const WishlistScreen()),
-                    ),
-                  ),
+                  Builder(builder: (context) {
+                    final wishlist = context.watch<WishlistProvider>();
+                    final count = wishlist.items.length;
+                    return _MenuItem(
+                      icon: Icons.favorite_outline,
+                      label: 'Saved Items',
+                      badge: count > 0 ? count.toString() : null,
+                      onTap: () => Navigator.push(
+                        context,
+                        FadeSlideTransition(page: const WishlistScreen()),
+                      ),
+                    );
+                  }),
                   _Divider(),
                   _MenuItem(
                     icon: Icons.credit_card_outlined,
@@ -300,7 +305,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 100),
+            const SizedBox(height: 24),
           ],
         ),
       ),

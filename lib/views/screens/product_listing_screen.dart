@@ -137,7 +137,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
           // Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 56),
               child: Column(
                 children: [
                   // Season banner
@@ -262,12 +262,11 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       childAspectRatio: 0.58,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 20,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
                     ),
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {

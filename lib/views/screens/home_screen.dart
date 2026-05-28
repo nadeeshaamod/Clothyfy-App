@@ -94,14 +94,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 120),
+        padding: const EdgeInsets.only(bottom: 56),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Hero banner
             _HeroBanner(),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 18),
 
             // Trending Now section
             Padding(
@@ -139,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
 
             // Category row
             SizedBox(
@@ -219,14 +219,14 @@ class _HomeScreenState extends State<HomeScreen> {
             // Product grid
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GridView.builder(
+                child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   childAspectRatio: 0.58,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
                 ),
                 itemCount: firstGridProducts.length,
                 itemBuilder: (context, index) {
@@ -243,19 +243,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
             // More products
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GridView.builder(
+                child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   childAspectRatio: 0.58,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
                 ),
                 itemCount: secondGridProducts.length,
                 itemBuilder: (context, index) {
