@@ -2,10 +2,16 @@
 // User profile screen
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/wishlist_provider.dart';
 import '../../utils/app_theme.dart';
 import '../widgets/reusable_widgets.dart';
 import 'login_screen.dart';
 import 'product_listing_screen.dart';
+import 'order_history_screen.dart';
+import 'payment_methods_screen.dart';
+import 'settings_screen.dart';
 import 'wishlist_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -13,6 +19,9 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       extendBody: true,
@@ -39,7 +48,7 @@ class ProfileScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -54,20 +63,131 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Nadeesha Amod',
-                    style: TextStyle(
+                  Text(
+                    user?.name ?? 'Nadeesha Amod',
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
                       color: AppColors.dark,
                     ),
                   ),
+                  if (user?.email != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      user!.email,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.grey,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        final auth = context.read<AuthProvider>();
+                        final nameController = TextEditingController(
+                          text: user?.name ?? 'Nadeesha Amod',
+                        );
+                        final emailController = TextEditingController(
+                          text: user?.email ?? '',
+                        );
+                        final phoneController = TextEditingController(
+                          text: user?.phone ?? '',
+                        );
+                        final addressController = TextEditingController(
+                          text: user?.address ?? '',
+                        );
+                        final cityController = TextEditingController(
+                          text: user?.city ?? '',
+                        );
+                        final zipController = TextEditingController(
+                          text: user?.zip ?? '',
+                        );
+
+                        final saved = await showDialog<bool>(
+                          context: context,
+                          builder: (dialogContext) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            title: const Text('Edit Profile'),
+                            content: SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextField(
+                                    controller: nameController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Name',
+                                    ),
+                                  ),
+                                  TextField(
+                                    controller: emailController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Email',
+                                    ),
+                                  ),
+                                  TextField(
+                                    controller: phoneController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Phone',
+                                    ),
+                                  ),
+                                  TextField(
+                                    controller: addressController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Address',
+                                    ),
+                                  ),
+                                  TextField(
+                                    controller: cityController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'City',
+                                    ),
+                                  ),
+                                  TextField(
+                                    controller: zipController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'ZIP',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(dialogContext, false),
+                                child: const Text('CANCEL'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(dialogContext, true),
+                                child: const Text('SAVE'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (saved == true) {
+                          await auth.updateProfile(
+                                name: nameController.text,
+                                email: emailController.text,
+                                phone: phoneController.text,
+                                address: addressController.text,
+                                city: cityController.text,
+                                zip: zipController.text,
+                              );
+                        }
+
+                        nameController.dispose();
+                        emailController.dispose();
+                        phoneController.dispose();
+                        addressController.dispose();
+                        cityController.dispose();
+                        zipController.dispose();
+                      },
                       style: OutlinedButton.styleFrom(
                         side:
                             const BorderSide(color: AppColors.dark, width: 1.5),
@@ -102,26 +222,42 @@ class ProfileScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.shopping_bag_outlined,
                     label: 'My Orders',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      FadeSlideTransition(page: const OrderHistoryScreen()),
+                    ),
                   ),
                   _Divider(),
-                  _MenuItem(
-                    icon: Icons.favorite_outline,
-                    label: 'Saved Items',
-                    badge: '12',
-                    onTap: () {},
-                  ),
+                  Builder(builder: (context) {
+                    final wishlist = context.watch<WishlistProvider>();
+                    final count = wishlist.items.length;
+                    return _MenuItem(
+                      icon: Icons.favorite_outline,
+                      label: 'Saved Items',
+                      badge: count > 0 ? count.toString() : null,
+                      onTap: () => Navigator.push(
+                        context,
+                        FadeSlideTransition(page: const WishlistScreen()),
+                      ),
+                    );
+                  }),
                   _Divider(),
                   _MenuItem(
                     icon: Icons.credit_card_outlined,
                     label: 'Payment Methods',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      FadeSlideTransition(page: const PaymentMethodsScreen()),
+                    ),
                   ),
                   _Divider(),
                   _MenuItem(
                     icon: Icons.settings_outlined,
                     label: 'Settings',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      FadeSlideTransition(page: const SettingsScreen()),
+                    ),
                   ),
                 ],
               ),
@@ -134,11 +270,16 @@ class ProfileScreen extends StatelessWidget {
               width: double.infinity,
               height: 50,
               child: OutlinedButton(
-                onPressed: () => Navigator.pushAndRemoveUntil(
-                  context,
-                  FadeSlideTransition(page: LoginScreen()),
-                  (_) => false,
-                ),
+                  onPressed: () async {
+                    await context.read<AuthProvider>().signOut();
+                    if (!context.mounted) {
+                      return;
+                    }
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  },
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppColors.dark, width: 1.5),
                   shape: RoundedRectangleBorder(
@@ -164,7 +305,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 100),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -178,7 +319,7 @@ class ProfileScreen extends StatelessWidget {
             Navigator.push(
                 context,
                 FadeSlideTransition(
-                    page: ProductListingScreen(category: 'All')));
+                    page: const ProductListingScreen(category: 'All')));
           } else if (index == 2) {
             Navigator.pop(context);
             Navigator.push(
@@ -196,7 +337,7 @@ class _MenuItem extends StatelessWidget {
   final VoidCallback onTap;
   final String? badge;
 
-  _MenuItem({
+  const _MenuItem({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -240,7 +381,7 @@ class _MenuItem extends StatelessWidget {
                 ),
               ),
             const SizedBox(width: 12),
-            Icon(Icons.chevron_right, size: 18, color: AppColors.grey),
+            const Icon(Icons.chevron_right, size: 18, color: AppColors.grey),
           ],
         ),
       ),

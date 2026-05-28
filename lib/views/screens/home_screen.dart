@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/products_provider.dart';
 import '../../utils/app_theme.dart';
 import '../widgets/product_card.dart';
 import '../widgets/reusable_widgets.dart';
@@ -24,6 +25,17 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _navIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      context.read<ProductsProvider>().loadProducts();
+    });
+  }
+
   void _onNavTap(int index) {
     if (index == 0) {
       setState(() => _navIndex = 0);
@@ -41,6 +53,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+    final products = context.watch<ProductsProvider>().featuredProducts;
+    final firstGridProducts = products.take(4).toList();
+    final secondGridProducts = products.length > 4 ? products.skip(4).take(4).toList() : <Product>[];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -79,14 +94,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 120),
+        padding: const EdgeInsets.only(bottom: 56),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Hero banner
             _HeroBanner(),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 18),
 
             // Trending Now section
             Padding(
@@ -124,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
 
             // Category row
             SizedBox(
@@ -204,18 +219,18 @@ class _HomeScreenState extends State<HomeScreen> {
             // Product grid
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GridView.builder(
+                child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   childAspectRatio: 0.58,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
                 ),
-                itemCount: 4,
+                itemCount: firstGridProducts.length,
                 itemBuilder: (context, index) {
-                  final product = dummyProducts[index];
+                  final product = firstGridProducts[index];
                   return ProductCard(
                     product: product,
                     onTap: () => Navigator.push(
@@ -228,23 +243,23 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
             // More products
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GridView.builder(
+                child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   childAspectRatio: 0.58,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
                 ),
-                itemCount: 4,
+                itemCount: secondGridProducts.length,
                 itemBuilder: (context, index) {
-                  final product = dummyProducts[index + 4];
+                  final product = secondGridProducts[index];
                   return ProductCard(
                     product: product,
                     onTap: () => Navigator.push(
@@ -365,7 +380,7 @@ class _HeroBannerState extends State<_HeroBanner> {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withOpacity(0.7),
+                              Colors.black.withValues(alpha: 0.7),
                             ],
                           ),
                         ),
@@ -382,7 +397,7 @@ class _HeroBannerState extends State<_HeroBanner> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 5),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.6),
+                                  color: Colors.black.withValues(alpha: 0.6),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(

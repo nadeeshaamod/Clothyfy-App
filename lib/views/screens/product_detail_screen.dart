@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/products_provider.dart';
 import '../../providers/wishlist_provider.dart';
 import '../../utils/app_theme.dart';
 import '../widgets/reusable_widgets.dart';
@@ -79,6 +80,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
+    final catalog = context.watch<ProductsProvider>().products;
     final wishlist = context.watch<WishlistProvider>();
     final isWishlisted = wishlist.isWishlisted(product.id);
 
@@ -97,7 +99,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               color: Colors.white,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8)
+                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8)
               ],
             ),
             child: const Icon(Icons.arrow_back_ios_new,
@@ -149,7 +151,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         decoration: BoxDecoration(
                           color: i == 0
                               ? AppColors.dark
-                              : Colors.grey.withOpacity(0.4),
+                              : Colors.grey.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
@@ -251,12 +253,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             border: Border.all(
                               color: _selectedColorIndex == i
                                   ? AppColors.dark
-                                  : Colors.grey.withOpacity(0.3),
+                                  : Colors.grey.withValues(alpha: 0.3),
                               width: _selectedColorIndex == i ? 2.5 : 1,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
+                                color: Colors.black.withValues(alpha: 0.08),
                                 blurRadius: 4,
                               ),
                             ],
@@ -367,7 +369,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 width: 24,
                                 height: 24,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(Icons.add,
@@ -448,11 +450,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     height: 180,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: 3,
+                      itemCount: catalog.length > 1 ? 3 : 0,
                       itemBuilder: (context, i) {
-                        final related = dummyProducts[
-                            (dummyProducts.indexOf(product) + i + 1) %
-                                dummyProducts.length];
+                        final relatedCandidates = catalog
+                            .where((item) => item.id != product.id)
+                            .toList();
+                        final related = relatedCandidates[
+                            i % relatedCandidates.length];
                         return GestureDetector(
                           onTap: () => Navigator.pushReplacement(
                             context,
@@ -488,7 +492,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.9),
+                                          color: Colors.white.withValues(alpha: 0.9),
                                           borderRadius:
                                               BorderRadius.circular(4),
                                         ),

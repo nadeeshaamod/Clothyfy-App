@@ -17,4 +17,22 @@ class CartItem {
   });
 
   double get totalPrice => product.price * quantity;
+
+  factory CartItem.fromMap(Map<String, dynamic> map) {
+    return CartItem(
+      product: Product.fromMap(Map<String, dynamic>.from(map['product'] ?? {})),
+      selectedSize: map['selectedSize']?.toString() ?? '',
+      selectedColor: map['selectedColor']?.toString() ?? '',
+      quantity: (map['quantity'] as num?)?.toInt() ?? 1,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'product': product.toMap(),
+      'selectedSize': selectedSize,
+      'selectedColor': selectedColor,
+      'quantity': quantity,
+    };
+  }
 }

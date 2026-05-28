@@ -3,7 +3,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/orders_provider.dart';
 import '../../utils/app_theme.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -19,8 +21,60 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _cityController = TextEditingController(text: 'Gampaha');
   final _zipController = TextEditingController(text: '10001');
   int _selectedPayment = 0; // 0 = Apple Pay, 1 = Credit Card
+  bool _isPlacing = false;
 
-  void _placeOrder(BuildContext context) {
+  Future<void> _placeOrder(BuildContext context) async {
+    if (_isPlacing) return;
+    setState(() => _isPlacing = true);
+
+    // Avoid capturing the BuildContext across awaits; check `mounted` after async work.
+    final auth = context.read<AuthProvider>();
+    final user = auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in to place an order'),
+          backgroundColor: AppColors.dark,
+        ),
+      );
+      setState(() => _isPlacing = false);
+      return;
+    }
+
+    final cart = context.read<CartProvider>();
+    final orders = context.read<OrdersProvider>();
+    final paymentMethod = _selectedPayment == 0 ? 'Apple Pay' : 'Credit Card';
+    final address = '${_addressController.text}, ${_cityController.text} ${_zipController.text}';
+
+    final success = await orders.placeOrder(
+      user: user,
+      cartItems: cart.items,
+      paymentMethod: paymentMethod,
+      address: address,
+      city: _cityController.text,
+      zip: _zipController.text,
+      subtotal: cart.subtotal,
+      shipping: cart.hasFreeShipping ? 0 : 12,
+      tax: cart.tax,
+      total: cart.total + (cart.hasFreeShipping ? 0 : 12),
+    );
+
+    if (!mounted) return;
+
+    if (!success) {
+      final err = orders.lastError;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(err ?? 'Unable to place order'),
+          backgroundColor: AppColors.dark,
+        ),
+      );
+      setState(() => _isPlacing = false);
+      return;
+    }
+
+    setState(() => _isPlacing = false);
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -60,7 +114,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    context.read<CartProvider>().clearCart();
+                    cart.clearCart();
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   },
                   child: const Text('CONTINUE SHOPPING'),
@@ -107,8 +161,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         actions: [
           IconButton(
-            icon:
-                const Icon(Icons.shopping_bag_outlined, color: AppColors.dark),
+            icon: const Icon(Icons.shopping_bag_outlined, color: AppColors.dark),
             onPressed: () {},
           ),
         ],
@@ -289,7 +342,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ),
                       )),
 
-                  Divider(color: Colors.white.withOpacity(0.15)),
+                  Divider(color: Colors.white.withValues(alpha: 0.15)),
                   const SizedBox(height: 12),
 
                   // Subtotal
@@ -393,30 +446,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         color: AppColors.background,
-        child: SizedBox(
-          height: 56,
-          child: ElevatedButton(
-            onPressed: () => _placeOrder(context),
+          child: SizedBox(
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _isPlacing ? null : () => _placeOrder(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.dark,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(50)),
             ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Place Order',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(width: 10),
-                Icon(Icons.arrow_forward, color: Colors.white, size: 16),
-              ],
-            ),
+              child: _isPlacing
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Place Order',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 16),
+                      ],
+                    ),
           ),
         ),
       ),

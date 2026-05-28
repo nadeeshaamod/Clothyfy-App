@@ -29,6 +29,40 @@ class Product {
     this.isNew = false,
     this.badge,
   });
+
+  factory Product.fromMap(Map<String, dynamic> map, {String? id}) {
+    return Product(
+      id: id ?? map['id']?.toString() ?? '',
+      name: map['name']?.toString() ?? '',
+      brand: map['brand']?.toString() ?? '',
+      category: map['category']?.toString() ?? '',
+      price: (map['price'] as num?)?.toDouble() ?? 0,
+      imageUrl: map['imageUrl']?.toString() ?? '',
+      description: map['description']?.toString() ?? '',
+      sizes: List<String>.from(map['sizes'] ?? const <String>[]),
+      colors: List<String>.from(map['colors'] ?? const <String>[]),
+      rating: (map['rating'] as num?)?.toDouble() ?? 4.5,
+      isNew: map['isNew'] as bool? ?? false,
+      badge: map['badge']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'brand': brand,
+      'category': category,
+      'price': price,
+      'imageUrl': imageUrl,
+      'description': description,
+      'sizes': sizes,
+      'colors': colors,
+      'rating': rating,
+      'isNew': isNew,
+      'badge': badge,
+    };
+  }
 }
 
 // Dummy product data for Phase 1 (no Firebase yet)

@@ -3,8 +3,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/products_provider.dart';
 import '../../utils/app_theme.dart';
 import '../widgets/product_card.dart';
 import '../widgets/reusable_widgets.dart';
@@ -24,27 +24,12 @@ class ProductListingScreen extends StatefulWidget {
 
 class _ProductListingScreenState extends State<ProductListingScreen> {
   String _activeFilter = 'SORT';
-  late List<Product> _filtered;
-
-  @override
-  void initState() {
-    super.initState();
-    _applyFilter();
-  }
-
-  void _applyFilter() {
-    if (widget.category == 'All') {
-      _filtered = dummyProducts;
-    } else {
-      _filtered =
-          dummyProducts.where((p) => p.category == widget.category).toList();
-      if (_filtered.isEmpty) _filtered = dummyProducts;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+    final productProvider = context.watch<ProductsProvider>();
+    final filtered = productProvider.byCategory(widget.category);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -152,7 +137,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
           // Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 56),
               child: Column(
                 children: [
                   // Season banner
@@ -176,7 +161,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
                               end: Alignment.centerLeft,
                               colors: [
                                 Colors.transparent,
-                                Colors.black.withOpacity(0.6),
+                                Colors.black.withValues(alpha: 0.6),
                               ],
                             ),
                           ),
@@ -277,16 +262,15 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       childAspectRatio: 0.58,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 20,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
                     ),
-                    itemCount: _filtered.length,
+                    itemCount: filtered.length,
                     itemBuilder: (context, index) {
-                      final product = _filtered[index];
+                      final product = filtered[index];
                       return ProductCard(
                         product: product,
                         onTap: () => Navigator.push(

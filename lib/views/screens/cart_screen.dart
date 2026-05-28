@@ -14,6 +14,10 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+    // Reserve space at the bottom for the floating bottom nav + device inset
+    const double bottomNavHeight = 56; // standard nav height used across app
+    final double bottomInset = MediaQuery.of(context).padding.bottom;
+    final double bottomReserve = bottomInset + bottomNavHeight;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -23,7 +27,6 @@ class CartScreen extends StatelessWidget {
           ? _EmptyCart()
           : Column(
               children: [
-                // Header
                 const Padding(
                   padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
                   child: Row(
@@ -52,8 +55,6 @@ class CartScreen extends StatelessWidget {
                     style: const TextStyle(fontSize: 13, color: AppColors.grey),
                   ),
                 ),
-
-                // Cart items list
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -80,14 +81,12 @@ class CartScreen extends StatelessWidget {
                     },
                   ),
                 ),
-
-                // Order summary card
                 Container(
-                  margin: const EdgeInsets.all(20),
-                  padding: const EdgeInsets.all(20),
+                  margin: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomReserve),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: AppColors.darkCard,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,28 +95,31 @@ class CartScreen extends StatelessWidget {
                         'Order Summary',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      _SummaryRow(
-                          label: 'Subtotal',
-                          value: '\$${cart.subtotal.toStringAsFixed(2)}'),
                       const SizedBox(height: 10),
                       _SummaryRow(
-                          label: 'Shipping',
-                          value: cart.hasFreeShipping ? 'FREE' : '\$12.00',
-                          valueColor: cart.hasFreeShipping
-                              ? Colors.greenAccent
-                              : Colors.white),
-                      const SizedBox(height: 10),
+                        label: 'Subtotal',
+                        value: '\$${cart.subtotal.toStringAsFixed(2)}',
+                      ),
+                      const SizedBox(height: 8),
                       _SummaryRow(
-                          label: 'Tax',
-                          value: '\$${cart.tax.toStringAsFixed(2)}'),
-                      const SizedBox(height: 16),
-                      Divider(color: Colors.white.withOpacity(0.15)),
-                      const SizedBox(height: 16),
+                        label: 'Shipping',
+                        value: cart.hasFreeShipping ? 'FREE' : '\$12.00',
+                        valueColor: cart.hasFreeShipping
+                            ? Colors.greenAccent
+                            : Colors.white,
+                      ),
+                      const SizedBox(height: 8),
+                      _SummaryRow(
+                        label: 'Tax',
+                        value: '\$${cart.tax.toStringAsFixed(2)}',
+                      ),
+                      const SizedBox(height: 10),
+                      Divider(color: Colors.white.withValues(alpha: 0.12)),
+                      const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -125,7 +127,7 @@ class CartScreen extends StatelessWidget {
                             'Total',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -133,18 +135,16 @@ class CartScreen extends StatelessWidget {
                             '\$${cart.total.toStringAsFixed(2)}',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 24,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-
-                      // Checkout button
+                      const SizedBox(height: 10),
                       SizedBox(
                         width: double.infinity,
-                        height: 52,
+                        height: 44,
                         child: ElevatedButton(
                           onPressed: () => Navigator.push(
                             context,
@@ -153,7 +153,8 @@ class CartScreen extends StatelessWidget {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(50)),
+                              borderRadius: BorderRadius.circular(40),
+                            ),
                           ),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -162,27 +163,29 @@ class CartScreen extends StatelessWidget {
                                 'Proceed to Checkout',
                                 style: TextStyle(
                                   color: AppColors.dark,
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              SizedBox(width: 10),
-                              Icon(Icons.arrow_forward,
-                                  color: AppColors.dark, size: 16),
+                              SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward,
+                                color: AppColors.dark,
+                                size: 14,
+                              ),
                             ],
                           ),
                         ),
                       ),
-
-                      const SizedBox(height: 12),
-
-                      // Promo code field
+                      const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.white.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -191,8 +194,8 @@ class CartScreen extends StatelessWidget {
                               'PROMO CODE',
                               style: TextStyle(
                                 color: Colors.white38,
-                                fontSize: 12,
-                                letterSpacing: 1.5,
+                                fontSize: 11,
+                                letterSpacing: 1.2,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -200,7 +203,7 @@ class CartScreen extends StatelessWidget {
                               'APPLY',
                               style: TextStyle(
                                 color: Colors.white60,
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1,
                               ),
@@ -208,21 +211,21 @@ class CartScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-
-                      const SizedBox(height: 12),
-
-                      // Secure checkout notice
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.verified_outlined,
-                              color: Colors.white38, size: 14),
+                          const Icon(
+                            Icons.verified_outlined,
+                            color: Colors.white38,
+                            size: 12,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Secure checkout powered by Stripe',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.4),
-                              fontSize: 11,
+                              color: Colors.white.withValues(alpha: 0.38),
+                              fontSize: 10,
                             ),
                           ),
                         ],
